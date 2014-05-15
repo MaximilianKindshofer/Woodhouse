@@ -1,4 +1,4 @@
-from PySide import QtGui
+from PySide import QtGui, QtCore
 import sys
 
 class MainWindow(QtGui.QWidget):
@@ -15,6 +15,8 @@ class MainWindow(QtGui.QWidget):
         folderbar = QtGui.QLabel('Folders')
         self.folderlist = QtGui.QListWidget(self)
         self.folderlist.SingleSelection
+        #TODO: When a folder is selected, the Rulesection should show
+        #Only the Rules for this folder
         folderaddbutton = QtGui.QPushButton('Add',self)
         folderaddbutton.clicked.connect(self.addFolder)
         folderdeletebutton = QtGui.QPushButton('Delete', self)
@@ -26,6 +28,8 @@ class MainWindow(QtGui.QWidget):
         self.rulelist.SingleSelection
         ruleaddbutton = QtGui.QPushButton('Add', self)
         ruleaddbutton.clicked.connect(self.addRule)
+        ruleviewbutton = QtGui.QPushButton('View', self)
+        ruleviewbutton.clicked.connect(self.viewRule)
         ruledeletebutton = QtGui.QPushButton('Delete', self)
         ruledeletebutton.clicked.connect(self.deleteRule)
         ruletestbutton = QtGui.QPushButton('Test Rule', self)
@@ -43,10 +47,11 @@ class MainWindow(QtGui.QWidget):
         self.grid.addWidget(QtGui.QLabel(''),0, 2, 1, 5)
         #right side
         self.grid.addWidget(rulebar, 0, 3)
-        self.grid.addWidget(self.rulelist, 1, 3, 1, 3)
+        self.grid.addWidget(self.rulelist, 1, 3, 1, 4)
         self.grid.addWidget(ruleaddbutton, 2, 3)
-        self.grid.addWidget(ruledeletebutton, 2, 4)
-        self.grid.addWidget(ruletestbutton,2 , 5)
+        self.grid.addWidget(ruleviewbutton, 2, 4)
+        self.grid.addWidget(ruledeletebutton, 2, 5)
+        self.grid.addWidget(ruletestbutton,2 , 6)
         self.setLayout(self.grid)
         self.show()
 
@@ -64,7 +69,9 @@ class MainWindow(QtGui.QWidget):
             #last 2
             showfolder = folder
             showfolder = str(showfolder)[3:-2]
-            QtGui.QListWidgetItem(showfolder, self.folderlist)
+            duplicates = self.folderlist.findItems(showfolder, QtCore.Qt.MatchExactly)
+            if len(duplicates) == 0:
+                QtGui.QListWidgetItem(showfolder, self.folderlist)
             
 
     def deleteFolder(self):
@@ -76,6 +83,11 @@ class MainWindow(QtGui.QWidget):
 
 
     def addRule(self):
+        #Rules should be added to the selected folder and be stored somewhere
+        #so that python can read the config and act acordingly
+        pass
+
+    def viewRule(self):
         pass
 
     def deleteRule(self):
