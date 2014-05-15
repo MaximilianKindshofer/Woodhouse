@@ -13,8 +13,8 @@ class MainWindow(QtGui.QWidget):
 
         #the left side of the window with the folders
         folderbar = QtGui.QLabel('Folders')
-        folderlist = QtGui.QListWidget(self)
-        folderlist.SingleSelection
+        self.folderlist = QtGui.QListWidget(self)
+        self.folderlist.SingleSelection
         folderaddbutton = QtGui.QPushButton('Add',self)
         folderaddbutton.clicked.connect(self.addFolder)
         folderdeletebutton = QtGui.QPushButton('Delete', self)
@@ -22,8 +22,8 @@ class MainWindow(QtGui.QWidget):
 
         #the right side of the window with the rules
         rulebar = QtGui.QLabel('Rules')
-        rulelist = QtGui.QListWidget(self)
-        rulelist.SingleSelection
+        self.rulelist = QtGui.QListWidget(self)
+        self.rulelist.SingleSelection
         ruleaddbutton = QtGui.QPushButton('Add', self)
         ruleaddbutton.clicked.connect(self.addRule)
         ruledeletebutton = QtGui.QPushButton('Delete', self)
@@ -36,14 +36,14 @@ class MainWindow(QtGui.QWidget):
         #left side
         self.grid = QtGui.QGridLayout()
         self.grid.addWidget(folderbar, 0, 0)
-        self.grid.addWidget(folderlist,1, 0, 1, 2)
+        self.grid.addWidget(self.folderlist,1, 0, 1, 2)
         self.grid.addWidget(folderaddbutton, 2, 0)
         self.grid.addWidget(folderdeletebutton, 2, 1)
         #space between the lists
         self.grid.addWidget(QtGui.QLabel(''),0, 2, 1, 5)
         #right side
         self.grid.addWidget(rulebar, 0, 3)
-        self.grid.addWidget(rulelist, 1, 3, 1, 3)
+        self.grid.addWidget(self.rulelist, 1, 3, 1, 3)
         self.grid.addWidget(ruleaddbutton, 2, 3)
         self.grid.addWidget(ruledeletebutton, 2, 4)
         self.grid.addWidget(ruletestbutton,2 , 5)
@@ -58,10 +58,22 @@ class MainWindow(QtGui.QWidget):
         folder = ''
         if folderselect.exec_():
             folder = folderselect.selectedFiles()
-        #TODO:add Folder to ListWidget
+            #to Display the Path in the List, we first copy
+            #the data in a new variable, it has the form of
+            #['u/path/to/blerg'] we slice the first 3 and the 
+            #last 2
+            showfolder = folder
+            showfolder = str(showfolder)[3:-2]
+            QtGui.QListWidgetItem(showfolder, self.folderlist)
+            
 
     def deleteFolder(self):
-        pass
+        #wow since adding was so easy i thoght removing is as well
+        #but apprently not. the right methode is to takeitem()
+        #https://stackoverflow.com/questions/7484699/pyqt4-remove-item-widget-from-qlistwidget
+        for selectedfolder in self.folderlist.selectedItems():
+            self.folderlist.takeItem(self.folderlist.row(selectedfolder))
+
 
     def addRule(self):
         pass
