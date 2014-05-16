@@ -65,14 +65,14 @@ class MainWindow(QtGui.QWidget):
             folder = folderselect.selectedFiles()
             #to Display the Path in the List, we first copy
             #the data in a new variable, it has the form of
-            #['u/path/to/blerg'] we slice the first 3 and the 
+            #['u/path/to/blerg'] we slice the first 3 and the
             #last 2
             showfolder = folder
             showfolder = str(showfolder)[3:-2]
             duplicates = self.folderlist.findItems(showfolder, QtCore.Qt.MatchExactly)
             if len(duplicates) == 0:
                 QtGui.QListWidgetItem(showfolder, self.folderlist)
-            
+
 
     def deleteFolder(self):
         #wow since adding was so easy i thoght removing is as well
