@@ -11,18 +11,18 @@ class MainWindow(QtGui.QWidget):
         self.setWindowTitle('Woodhouse')
         self.setGeometry(300, 300, 250, 350)
 
-        #the left side of the window with the folders
+        # the left side of the window with the folders
         folderbar = QtGui.QLabel('Folders')
         self.folderlist = QtGui.QListWidget(self)
         self.folderlist.SingleSelection
-        #TODO: When a folder is selected, the Rulesection should show
-        #Only the Rules for this folder
+        # TODO: When a folder is selected, the Rulesection should show
+        # Only the Rules for this folder
         folderaddbutton = QtGui.QPushButton('Add',self)
         folderaddbutton.clicked.connect(self.addFolder)
         folderdeletebutton = QtGui.QPushButton('Delete', self)
         folderdeletebutton.clicked.connect(self.deleteFolder)
 
-        #the right side of the window with the rules
+        # the right side of the window with the rules
         rulebar = QtGui.QLabel('Rules')
         self.rulelist = QtGui.QListWidget(self)
         self.rulelist.SingleSelection
@@ -35,17 +35,17 @@ class MainWindow(QtGui.QWidget):
         ruletestbutton = QtGui.QPushButton('Test Rule', self)
         ruletestbutton.clicked.connect(self.ruleTest)
 
-        #GridLayout
+        # GridLayout
 
-        #left side
+        # left side
         self.grid = QtGui.QGridLayout()
         self.grid.addWidget(folderbar, 0, 0)
         self.grid.addWidget(self.folderlist,1, 0, 1, 2)
         self.grid.addWidget(folderaddbutton, 2, 0)
         self.grid.addWidget(folderdeletebutton, 2, 1)
-        #space between the lists
+        # space between the lists
         self.grid.addWidget(QtGui.QLabel(''),0, 2, 1, 5)
-        #right side
+        # right side
         self.grid.addWidget(rulebar, 0, 3)
         self.grid.addWidget(self.rulelist, 1, 3, 1, 4)
         self.grid.addWidget(ruleaddbutton, 2, 3)
@@ -56,17 +56,19 @@ class MainWindow(QtGui.QWidget):
         self.show()
 
     def addFolder(self):
-        #select Folder and display it
+        # select Folder and display it
         folderselect = QtGui.QFileDialog()
         folderselect.setFileMode(QtGui.QFileDialog.Directory)
         folderselect.setOption(QtGui.QFileDialog.ShowDirsOnly)
         folder = ''
         if folderselect.exec_():
             folder = folderselect.selectedFiles()
-            #to Display the Path in the List, we first copy
-            #the data in a new variable, it has the form of
-            #['u/path/to/blerg'] we slice the first 3 and the
-            #last 2
+            # to Display the Path in the List, we first copy
+            # the data in a new variable cause we want to
+            # give the folder variable to an other function later
+            # it has the form of
+            # ['u/path/to/blerg'] we slice the first 3 and the
+            # last 2
             showfolder = folder
             showfolder = str(showfolder)[3:-2]
             duplicates = self.folderlist.findItems(showfolder, QtCore.Qt.MatchExactly)
@@ -75,16 +77,16 @@ class MainWindow(QtGui.QWidget):
 
 
     def deleteFolder(self):
-        #wow since adding was so easy i thoght removing is as well
-        #but apprently not. the right methode is to takeitem()
-        #https://stackoverflow.com/questions/7484699/pyqt4-remove-item-widget-from-qlistwidget
+        # wow since adding was so easy i thoght removing is as well
+        # but apprently not. the right methode is to takeitem()
+        # https://stackoverflow.com/questions/7484699/pyqt4-remove-item-widget-from-qlistwidget
         for selectedfolder in self.folderlist.selectedItems():
             self.folderlist.takeItem(self.folderlist.row(selectedfolder))
 
 
     def addRule(self):
-        #Rules should be added to the selected folder and be stored somewhere
-        #so that python can read the config and act acordingly
+        # Rules should be added to the selected folder and be stored somewhere
+        # so that python can read the config and act acordingly
         pass
 
     def viewRule(self):
