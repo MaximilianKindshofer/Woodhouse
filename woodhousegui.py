@@ -1,5 +1,5 @@
 from PySide import QtGui, QtCore
-import sys
+import sys, woodhouse
 
 class MainWindow(QtGui.QWidget):
 
@@ -27,7 +27,7 @@ class MainWindow(QtGui.QWidget):
         self.rulelist = QtGui.QListWidget(self)
         self.rulelist.SingleSelection
         ruleaddbutton = QtGui.QPushButton('Add', self)
-        ruleaddbutton.clicked.connect(self.addRule)
+        ruleaddbutton.clicked.connect(self.configRule)
         ruleviewbutton = QtGui.QPushButton('View', self)
         ruleviewbutton.clicked.connect(self.viewRule)
         ruledeletebutton = QtGui.QPushButton('Delete', self)
@@ -84,10 +84,69 @@ class MainWindow(QtGui.QWidget):
             self.folderlist.takeItem(self.folderlist.row(selectedfolder))
 
 
-    def addRule(self):
-        # Rules should be added to the selected folder and be stored somewhere
-        # so that python can read the config and act acordingly
-        pass
+    def configRule(self):
+        # Configurate Rules and calls the addRuleHelper function
+        #
+        # selectedItems() currentItem would also work but it raises
+        # an error after the if statement... not implemented yet error.
+        # well I have no clue why, it has something to to with
+        # None
+        foldername = self.folderlist.selectedItems()
+        if foldername == []:
+            msgBox = QtGui.QMessageBox()
+            msgBox.setWindowTitle('No selected Folder')
+            msgBox.setText("Choose a Folder to apply rules to.")
+            msgBox.exec_()
+        else:
+            ruleset = QtGui.QDialog(self)
+            # how to get the folders humanreadabel text (label)
+            # http://stackoverflow.com/questions/12087715/pyqt4-get-list-of-all-labels-in-qlistwidget
+            # again this could be more elegant but since I got the list from
+            # selectedItems it would be wasteful just to use it for the
+            # first check. Room for improvement.
+            title = [t.text() for t in foldername]
+            ruleset.setWindowTitle(title[0] + " rule set")
+            namelabel = QtGui.QLabel('Name of the rule: ')
+            self.nameline = QtGui.QLineEdit()
+            timelabel = QtGui.QLabel('Delete files older than')
+            time = QtGui.QLineEdit()
+            time.setInputMask("999")
+            timescale = QtGui.QComboBox()
+            timescale.insertItems(0,['days','months','years'])
+            foldercheck = QtGui.QCheckBox('Include containing folders',self)
+            savebutton = QtGui.QPushButton('Save',self)
+            self.rulefolder = title[0]
+            savebutton.clicked.connect(self.addRuleHelper)
+            closebutton = QtGui.QPushButton('Close',self)
+            closebutton.clicked.connect(ruleset.accept)
+            #Grid for the rule window
+            rulegrid = QtGui.QGridLayout()
+            rulegrid.addWidget(namelabel, 0, 0)
+            rulegrid.addWidget(self.nameline, 0, 1)
+            rulegrid.addWidget(timelabel, 1, 0)
+            rulegrid.addWidget(time, 1, 1)
+            rulegrid.addWidget(timescale,1, 2)
+            rulegrid.addWidget(foldercheck, 2, 0)
+            rulegrid.addWidget(savebutton, 3, 1)
+            rulegrid.addWidget(closebutton, 3, 2)
+            ruleset.setLayout(rulegrid)
+            ruleset.exec_()
+
+    def addRuleHelper(self):
+        #TODO:Get the real Text
+        print(self.nameline.text)
+        if self.nameline.text == '':
+            pass
+        else:
+            #TODO: Write real code
+            folder = 'Test'
+            saved = woodhouse.saverules(folder)
+            if saved == 'OK':
+                self.addRule(name)
+
+    def addRule(self, name):
+            name = label
+            QtGui.QListWidgetItem(label, self.rulelist)
 
     def viewRule(self):
         pass
