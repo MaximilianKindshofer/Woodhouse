@@ -1,3 +1,4 @@
+from PySide import QtGui, QtCore
 import woodhousegui
 import sys
 from configobj import ConfigObj
@@ -25,4 +26,9 @@ def testrules():
     pass
 
 def main():
-    pass
+    app = QtGui.QApplication(sys.argv)
+    woodhouse = woodhousegui.MainWindow()
+    sys.exit(app.exec_())
+
+if __name__ == '__main__':
+    main()
