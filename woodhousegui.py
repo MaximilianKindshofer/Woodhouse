@@ -6,6 +6,8 @@ class MainWindow(QtGui.QWidget):
     def __init__(self):
         super(MainWindow, self).__init__()
         self.initui()
+        self.folder = ''
+        #TODO: Load Rules on Startup if config file exists
 
     def initui(self):
         self.setWindowTitle('Woodhouse')
@@ -60,16 +62,15 @@ class MainWindow(QtGui.QWidget):
         folderselect = QtGui.QFileDialog()
         folderselect.setFileMode(QtGui.QFileDialog.Directory)
         folderselect.setOption(QtGui.QFileDialog.ShowDirsOnly)
-        folder = ''
         if folderselect.exec_():
-            folder = folderselect.selectedFiles()
+            self.folder = folderselect.selectedFiles()
             # to Display the Path in the List, we first copy
             # the data in a new variable cause we want to
             # give the folder variable to an other function later
             # it has the form of
             # ['u/path/to/blerg'] we slice the first 3 and the
             # last 2
-            showfolder = folder
+            showfolder = self.folder
             showfolder = str(showfolder)[3:-2]
             duplicates = self.folderlist.findItems(showfolder, QtCore.Qt.MatchExactly)
             if len(duplicates) == 0:
@@ -80,6 +81,7 @@ class MainWindow(QtGui.QWidget):
         # wow since adding was so easy i thoght removing is as well
         # but apprently not. the right methode is to takeitem()
         # https://stackoverflow.com/questions/7484699/pyqt4-remove-item-widget-from-qlistwidget
+        # TODO: Delete all Rules for this Folder
         for selectedfolder in self.folderlist.selectedItems():
             self.folderlist.takeItem(self.folderlist.row(selectedfolder))
 
@@ -98,61 +100,78 @@ class MainWindow(QtGui.QWidget):
             msgBox.setText("Choose a Folder to apply rules to.")
             msgBox.exec_()
         else:
-            ruleset = QtGui.QDialog(self)
+            self.ruleset = QtGui.QDialog(self)
             # how to get the folders humanreadabel text (label)
             # http://stackoverflow.com/questions/12087715/pyqt4-get-list-of-all-labels-in-qlistwidget
             # again this could be more elegant but since I got the list from
             # selectedItems it would be wasteful just to use it for the
             # first check. Room for improvement.
             title = [t.text() for t in foldername]
-            ruleset.setWindowTitle(title[0] + " rule set")
+            self.ruleset.setWindowTitle(title[0] + " rule set")
             namelabel = QtGui.QLabel('Name of the rule: ')
             self.nameline = QtGui.QLineEdit()
             timelabel = QtGui.QLabel('Delete files older than')
-            time = QtGui.QLineEdit()
-            time.setInputMask("999")
-            timescale = QtGui.QComboBox()
-            timescale.insertItems(0,['days','months','years'])
-            foldercheck = QtGui.QCheckBox('Include containing folders',self)
+            self.time = QtGui.QLineEdit()
+            self.time.setInputMask("999")
+            self.timescale = QtGui.QComboBox()
+            self.timescale.insertItems(0,['days','months','years'])
+            self.foldercheck = QtGui.QCheckBox('Include containing folders',self)
             savebutton = QtGui.QPushButton('Save',self)
             self.rulefolder = title[0]
             savebutton.clicked.connect(self.addRuleHelper)
             closebutton = QtGui.QPushButton('Close',self)
-            closebutton.clicked.connect(ruleset.accept)
+            closebutton.clicked.connect(self.ruleset.accept)
             #Grid for the rule window
             rulegrid = QtGui.QGridLayout()
             rulegrid.addWidget(namelabel, 0, 0)
             rulegrid.addWidget(self.nameline, 0, 1)
             rulegrid.addWidget(timelabel, 1, 0)
-            rulegrid.addWidget(time, 1, 1)
-            rulegrid.addWidget(timescale,1, 2)
-            rulegrid.addWidget(foldercheck, 2, 0)
+            rulegrid.addWidget(self.time, 1, 1)
+            rulegrid.addWidget(self.timescale,1, 2)
+            rulegrid.addWidget(self.foldercheck, 2, 0)
             rulegrid.addWidget(savebutton, 3, 1)
             rulegrid.addWidget(closebutton, 3, 2)
-            ruleset.setLayout(rulegrid)
-            ruleset.exec_()
+            self.ruleset.setLayout(rulegrid)
+            self.ruleset.exec_()
 
     def addRuleHelper(self):
-        #TODO:Get the real Text
-        print(self.nameline.text)
-        if self.nameline.text == '':
-            pass
+        #get the text from configRule's QLineEdit
+        if self.nameline.text() == '':
+            msgBox = QtGui.QMessageBox()
+            msgBox.setWindowTitle('Name rule')
+            msgBox.setText('Please name your rule')
+            msgBox.exec_()
+        #check for duplicated rulenames
+        elif len(self.rulelist.findItems(self.nameline.text(),
+                                         QtCore.Qt.MatchExactly)) != 0:
+            msgBox = QtGui.QMessageBox()
+            msgBox.setWindowTitle('Duplicate rule')
+            msgBox.setText('Please use an other name')
+            msgBox.exec_()
         else:
-            #TODO: Write real code
-            folder = 'Test'
-            saved = woodhouse.saverules(folder)
+            self.ruleset.accept()
+            #TODO: Write real code in the Main File
+            pathobject = self.folderlist.selectedItems()
+            path = [p.text() for p in pathobject]
+            saved = woodhouse.saverules(path[0], self.nameline.text(),
+                                        self.time.text(),
+                                        self.timescale.currentText(),
+                                        self.foldercheck.isChecked())
             if saved == 'OK':
-                self.addRule(name)
+                self.addRule(self.nameline.text())
 
     def addRule(self, name):
-            name = label
+            label = name
             QtGui.QListWidgetItem(label, self.rulelist)
 
     def viewRule(self):
         pass
 
     def deleteRule(self):
-        pass
+        #like delete folder
+        # TODO: Delete Rule from Save
+        for selectedRule in self.rulelist.selectedItems():
+            self.rulelist.takeItem(self.rulelist.row(selectedRule))
 
     def ruleTest(self):
         pass
