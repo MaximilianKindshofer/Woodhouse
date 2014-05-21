@@ -1,30 +1,36 @@
 from PySide import QtGui, QtCore
 import woodhousegui
 import sys, os
-import ConfigParser
+import configparser
 
 
 def saverules(folder, rulename, time, timescale, subfolders):
     #config.filename = 'rules.conf'
-    config = ConfigParser.ConfigParser()
+    config = configparser.ConfigParser()
     section = str(folder + '::' + rulename)
-    config.add_section(section)
-    config.set(section, 'Time', time)
-    config.set(section, 'Timescale', timescale)
-    config.set(section, 'Subfolder', subfolders)
+    config[section] = {}
+    config[section]['Time'] = time
+    config[section]['Timescale'] = timescale
+    config[section]['Subfolder'] = str(subfolders)
 
-    with open('rules.conf',"wb") as config_file:
+    with open('rules.conf','w') as config_file:
         config.write(config_file)
     # saves the rule to a file and sends an ok
     return 'OK'
 
 
 
-def deleterules():
-    if not os.path.exists('rules'):
-        print('No config found!')
-    config = ConfigParser.ConfigParser()
+def deleterules(folder, rulename):
+    if not os.path.exists('rules.conf'):
+        return 'No config found!'
+    config = configparser.ConfigParser()
     config.read('rules.conf')
+    section = str(folder + '::' + rulename)
+    config.remove_section(section)
+
+    with open('rules.conf', 'w') as config_file:
+        config.write(config_file)
+    return 'OK'
 
 def showrules():
     pass

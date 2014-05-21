@@ -81,9 +81,24 @@ class MainWindow(QtGui.QWidget):
         # wow since adding was so easy i thoght removing is as well
         # but apprently not. the right methode is to takeitem()
         # https://stackoverflow.com/questions/7484699/pyqt4-remove-item-widget-from-qlistwidget
-        # TODO: Delete all Rules for this Folder
-        for selectedfolder in self.folderlist.selectedItems():
-            self.folderlist.takeItem(self.folderlist.row(selectedfolder))
+        # get all ruleitems assosiated with this folder via tooltips
+        rule = []
+        folders = self.folderlist.selectedItems()
+        foldername = [n.text() for n in folders]
+        for row in range(self.rulelist.count()):
+            rule.append(self.rulelist.item(row))
+
+        if rule != []:
+            for item in rule:
+                if item.toolTip() == foldername[0]:
+                    woodhouse.deleterules(item.toolTip(), item.text())
+                    self.rulelist.takeItem(self.rulelist.row(item))
+
+            for selectedfolder in self.folderlist.selectedItems():
+                self.folderlist.takeItem(self.folderlist.row(selectedfolder))
+        else:
+            for selectedfolder in self.folderlist.selectedItems():
+                self.folderlist.takeItem(self.folderlist.row(selectedfolder))
 
 
     def configRule(self):
@@ -150,7 +165,6 @@ class MainWindow(QtGui.QWidget):
             msgBox.exec_()
         else:
             self.ruleset.accept()
-            #TODO: Write real code in the Main File
             pathobject = self.folderlist.selectedItems()
             path = [p.text() for p in pathobject]
             saved = woodhouse.saverules(path[0], self.nameline.text(),
@@ -158,23 +172,35 @@ class MainWindow(QtGui.QWidget):
                                         self.timescale.currentText(),
                                         self.foldercheck.isChecked())
             if saved == 'OK':
-                self.addRule(self.nameline.text())
+                self.addRule(self.nameline.text(), path[0])
 
-    def addRule(self, name):
+    def addRule(self, name, folder):
             label = name
-            QtGui.QListWidgetItem(label, self.rulelist)
+            newItem = QtGui.QListWidgetItem()
+            newItem.setText(label)
+            # I use the tooltips as a hint to wich folder the Item belongs.
+            # This is important if you delete an item since if you delete
+            # the item you dont select a folder. It might be handy later
+            # to just show the items belonging to one folder
+            newItem.setToolTip(folder)
+            self.rulelist.addItem(newItem)
 
     def viewRule(self):
         pass
 
     def deleteRule(self):
-        #like delete folder
-        # TODO: Delete Rule from Save
-        for selectedRule in self.rulelist.selectedItems():
-            self.rulelist.takeItem(self.rulelist.row(selectedRule))
+
+        nameobject = self.rulelist.selectedItems()
+        name = [n.text() for n in nameobject]
+        path = [n.toolTip() for n in nameobject]
+        removed = woodhouse.deleterules(path[0],name[0])
+        if removed == 'OK':
+           for selectedRule in self.rulelist.selectedItems():
+               self.rulelist.takeItem(self.rulelist.row(selectedRule))
 
     def ruleTest(self):
         pass
+
 def main():
 
     app = QtGui.QApplication(sys.argv)
