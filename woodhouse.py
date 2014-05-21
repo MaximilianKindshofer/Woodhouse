@@ -28,7 +28,7 @@ def deleterules(folder, rulename):
     section = str(folder + '::' + rulename)
     config.remove_section(section)
 
-    with open('rules.conf', '') as config_file:
+    with open('rules.conf', 'w') as config_file:
         config.write(config_file)
     return 'OK'
 
