@@ -13,7 +13,7 @@ def saverules(folder, rulename, time, timescale, subfolders):
     config[section]['Timescale'] = timescale
     config[section]['Subfolder'] = str(subfolders)
 
-    with open('rules.conf','w') as config_file:
+    with open('rules.conf','a') as config_file:
         config.write(config_file)
     # saves the rule to a file and sends an ok
     return 'OK'
@@ -28,7 +28,7 @@ def deleterules(folder, rulename):
     section = str(folder + '::' + rulename)
     config.remove_section(section)
 
-    with open('rules.conf', 'w') as config_file:
+    with open('rules.conf', '') as config_file:
         config.write(config_file)
     return 'OK'
 
