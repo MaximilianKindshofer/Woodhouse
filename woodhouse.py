@@ -32,9 +32,55 @@ def deleterules(folder, rulename):
         config.write(config_file)
     return 'OK'
 
-def showrules():
-    pass
+def getRules(folder):
+    #returns a list of rulenames corresponding to the folder
+    listofrules = []
+    if not os.path.exists('rules.conf'):
+        return None
+    config = configparser.ConfigParser()
+    config.read('rules.conf')
+    sections = config.sections()
+    for sec in sections:
+        if folder in sec:
+            name = sec.split('::')
+            listofrules.append(name[1])
+    return listofrules
 
+def getFolders():
+    #return a list of foldernames
+    listoffolders = []
+    if not os.path.exists('rules.conf'):
+        return listoffolders
+    config = configparser.ConfigParser()
+    config.read('rules.conf')
+    sections = config.sections()
+    for sec in sections:
+        folder = sec.split('::')
+        #remove duplicates
+        for item in folder:
+            if folder.index(item) %2 == 0: 
+                listoffolders.append(item)
+    listoffolders = list(set(listoffolders))
+    return listoffolders
+
+
+def showruletime(folder, name):
+    config = configparser.ConfigParser()
+    config.read('rules.conf')
+    section = str(folder + '::' + name)
+    return config[section]['Time']
+
+def showruletimescale(folder, name):
+    config = configparser.ConfigParser()
+    config.read('rules.conf')
+    section = str(folder + '::' + name)
+    return config[section]['Timescale']
+
+def showrulesubfolder(folder, name):
+    config = configparser.ConfigParser()
+    config.read('rules.conf')
+    section = str(folder + '::' + name)
+    return config[section]['Subfolder']
 def testrules():
     pass
 
