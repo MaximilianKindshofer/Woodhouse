@@ -1,5 +1,5 @@
 from PySide import QtGui, QtCore
-import sys, woodhouse
+import sys, woodhouse, os
 
 class MainWindow(QtGui.QWidget):
 
@@ -8,6 +8,7 @@ class MainWindow(QtGui.QWidget):
         self.initui()
         self.folder = ''
         #TODO: Load Folders on Startup if config file exists
+        QtCore.QTimer.singleShot(0, self.garbageloop)
 
     def initui(self):
         self.setWindowTitle('Woodhouse')
@@ -26,7 +27,7 @@ class MainWindow(QtGui.QWidget):
         folderaddbutton.clicked.connect(self.addFolder)
         folderdeletebutton = QtGui.QPushButton('Delete', self)
         folderdeletebutton.clicked.connect(self.deleteFolder)
-        
+
         # the right side of the window with the rules
         rulebar = QtGui.QLabel('Rules')
         self.rulelist = QtGui.QListWidget(self)
@@ -110,7 +111,7 @@ class MainWindow(QtGui.QWidget):
         rulelist = woodhouse.getRules(folder)
         for rule in rulelist:
             self.addRule(rule, activeFolder.text())
-            
+
     def configRule(self):
         # Configurate Rules and calls the addRuleHelper function
         #
@@ -229,10 +230,10 @@ class MainWindow(QtGui.QWidget):
             ruleviewergrid.addWidget(folderlabel, 1, 0)
             self.ruleview.setLayout(ruleviewergrid)
             self.ruleview.exec_()
-            
-        
+
+
     def deleteRule(self):
-        
+
         nameobject = self.rulelist.selectedItems()
         if nameobject == []:
             msgBox = QtGui.QMessageBox()
@@ -247,6 +248,17 @@ class MainWindow(QtGui.QWidget):
                 for selectedRule in self.rulelist.selectedItems():
                     self.rulelist.takeItem(self.rulelist.row(selectedRule))
 
+    def garbageloop(self):
+        try:
+            if os.path.exists('rules.conf'):
+                woodhouse.clean()
+            else:
+                pass
+        finally:
+            #Launch every 30 Minutes
+            #QtCore.QTimer.singleShot(1800000, self.garbageloop)
+            #Launch every 30 Seconds for Testing
+            QtCore.QTimer.singleShot(30000, self.garbageloop)
     def ruleTest(self):
         pass
 

@@ -1,6 +1,6 @@
 from PySide import QtGui, QtCore
 import woodhousegui
-import sys, os
+import sys, os, time
 import configparser
 
 
@@ -16,6 +16,7 @@ def saverules(folder, rulename, time, timescale, subfolders):
     with open('rules.conf','a') as config_file:
         config.write(config_file)
     # saves the rule to a file and sends an ok
+    clean()
     return 'OK'
 
 
@@ -58,7 +59,7 @@ def getFolders():
         folder = sec.split('::')
         #remove duplicates
         for item in folder:
-            if folder.index(item) %2 == 0: 
+            if folder.index(item) %2 == 0:
                 listoffolders.append(item)
     listoffolders = list(set(listoffolders))
     return listoffolders
@@ -81,13 +82,26 @@ def showrulesubfolder(folder, name):
     config.read('rules.conf')
     section = str(folder + '::' + name)
     return config[section]['Subfolder']
+
 def testrules():
     pass
+
+def clean():
+    if not os.path.exists('rules.conf'):
+        return 'There are no rules!'
+    else:
+        print('I was activated')
+        config = configparser.ConfigParser()
+        config.read('rules.conf')
+
 
 def main():
     app = QtGui.QApplication(sys.argv)
     woodhouse = woodhousegui.MainWindow()
-    sys.exit(app.exec_())
+    app.exec_()
+    sys.exit()
+
+
 
 if __name__ == '__main__':
     main()
