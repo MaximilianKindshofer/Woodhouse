@@ -12,13 +12,12 @@ def saverules(folder, rulename, time, timescale, subfolders):
     config[section]['Time'] = time
     config[section]['Timescale'] = timescale
     config[section]['Subfolder'] = str(subfolders)
+    config[section]['activated'] = 'False'
 
     with open('rules.conf','a') as config_file:
         config.write(config_file)
     # saves the rule to a file and sends an ok
-    clean()
     return 'OK'
-
 
 
 def deleterules(folder, rulename):
@@ -32,7 +31,19 @@ def deleterules(folder, rulename):
     with open('rules.conf', 'w') as config_file:
         config.write(config_file)
     return 'OK'
-
+    
+def toggleactivateRule(folder, rulename):
+    config = configparser.ConfigParser()
+    config.read('rules.conf')
+    section = section = str(folder + '::' + rulename)
+    if config[section]['activated'] == 'False':
+        config[section]['activated'] = 'True'
+    else:
+        config[section]['activated'] = 'False'
+    with open('rules.conf', 'w') as config_file:
+        config.write(config_file)
+    return 'OK'
+    
 def getRules(folder):
     #returns a list of rulenames corresponding to the folder
     listofrules = []
@@ -82,6 +93,12 @@ def showrulesubfolder(folder, name):
     config.read('rules.conf')
     section = str(folder + '::' + name)
     return config[section]['Subfolder']
+
+def showruleactive(folder, name):
+    config = configparser.ConfigParser()
+    config.read('rules.conf')
+    section = str(folder + '::' + name)
+    return config[section]['activated'] 
 
 def testrules():
     pass

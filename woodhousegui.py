@@ -21,6 +21,7 @@ class MainWindow(QtGui.QWidget):
         #add folders from rules.conf
         for folder in woodhouse.getFolders():
             QtGui.QListWidgetItem(folder, self.folderlist)
+        #TODO: use the current and previouse variable to get names
         self.folderlist.currentItemChanged.connect(self.viewActiveFolderRules)
 
         folderaddbutton = QtGui.QPushButton('Add',self)
@@ -40,7 +41,9 @@ class MainWindow(QtGui.QWidget):
         ruledeletebutton.clicked.connect(self.deleteRule)
         ruletestbutton = QtGui.QPushButton('Test Rule', self)
         ruletestbutton.clicked.connect(self.ruleTest)
-
+        self.ruleenabledbutton = QtGui.QPushButton('Enable', self)
+        self.ruleenabledbutton.clicked.connect(self.togglerule)
+        self.rulelist.currentItemChanged.connect(self.ruleenabled)
         # GridLayout
 
         # left side
@@ -57,9 +60,37 @@ class MainWindow(QtGui.QWidget):
         self.grid.addWidget(ruleaddbutton, 2, 3)
         self.grid.addWidget(ruleviewbutton, 2, 4)
         self.grid.addWidget(ruledeletebutton, 2, 5)
-        self.grid.addWidget(ruletestbutton,2 , 6)
+        self.grid.addWidget(ruletestbutton, 2 , 6)
+        self.grid.addWidget(self.ruleenabledbutton, 2, 7)
         self.setLayout(self.grid)
         self.show()
+        
+    def ruleenabled(self, current):
+        rule = current.text()
+        folder = current.toolTip()
+        ruleenabled = woodhouse.showruleactive(folder, rule)
+        if ruleenabled == 'False':
+            self.ruleenabledbutton.setText('Enable')
+        else:
+            self.ruleenabledbutton.setText('Disable')
+            
+    def togglerule(self):
+        rule = self.rulelist.selectedItems()
+        rulename = [r.text() for r in rule]
+        for item in rule:
+            folder = item.toolTip()
+        if rulename == []:
+            msgBox = QtGui.QMessageBox()
+            msgBox.setWindowTitle('Select a rule')
+            msgBox.setText('Please select rule')
+            msgBox.exec_()
+        else:
+            woodhouse.toggleactivateRule(folder, rulename[0])
+            if woodhouse.showruleactive(folder, rulename[0]) == "True":
+                self.ruleenabledbutton.setText("Disable")
+            else:
+                self.ruleenabledbutton.setText("Enable")
+        
 
     def addFolder(self):
         # select Folder and display it
@@ -72,7 +103,7 @@ class MainWindow(QtGui.QWidget):
             # the data in a new variable cause we want to
             # give the folder variable to an other function later
             # it has the form of
-            # ['u/path/to/blerg'] we slice the first 3 and the
+            # ['/path/to/blerg'] we slice the first 2 and the
             # last 2
             showfolder = self.folder
             showfolder = str(showfolder)[2:-2]
@@ -214,23 +245,64 @@ class MainWindow(QtGui.QWidget):
             msgBox.setText('Please select rule')
             msgBox.exec_()
         else:
-            self.ruleview = QtGui.QDialog(self)
-            self.ruleview.setWindowTitle(rulename[0])
-            timelabel = QtGui.QLabel('Delete files older than ' + 
-                                     woodhouse.showruletime(folder, rulename[0]) + 
-                                     ' ' + woodhouse.showruletimescale(folder, rulename[0]))
+            self.ruleedit = QtGui.QDialog(self)
+            namelabel = QtGui.QLabel('Name of the rule: ')
+            self.namelineedit = QtGui.QLineEdit()
+            self.namelineedit.setText(rulename[0])
+            timelabel = QtGui.QLabel('Delete files older than')
+            self.timeedit = QtGui.QLineEdit()
+            self.timeedit.setInputMask("999")
+            self.timeedit.setText(woodhouse.showruletime(folder, rulename[0]))
+            self.timescaleedit = QtGui.QComboBox()
+            self.timescaleedit.insertItems(0,['days','months','years'])
+            print(rulename[0])
+            print(folder)
+            item = woodhouse.showruletimescale(folder, rulename[0])
+            print(item)
+            if item == 'days':
+                index = 1
+            elif item == 'months':
+                index = 2
+            elif item == 'years':
+                index = 3
+            self.timescaleedit.setCurrentIndex(index)
+            self.foldereditcheck = QtGui.QCheckBox('Include containing folders',self)
             if woodhouse.showrulesubfolder(folder, rulename[0]) == 'True':
-                subfolder = ' including subfolders'
+                state = QtCore.Qt.Checked
             else:
-                subfolder = ' not including subfolders'
-            folderlabel = QtGui.QLabel('In Folder ' +  folder + subfolder)
+                state = QtCore.Qt.Unchecked
+            self.foldereditcheck.setCheckState(state)
+            savebutton = QtGui.QPushButton('Save',self)
+            self.ruleeditfolder = folder
+            savebutton.clicked.connect(self.editRuleHelper)
+            closebutton = QtGui.QPushButton('Close',self)
+            closebutton.clicked.connect(self.ruleedit.accept)
             #Grid for the rule window
-            ruleviewergrid = QtGui.QGridLayout()
-            ruleviewergrid.addWidget(timelabel, 0, 0)
-            ruleviewergrid.addWidget(folderlabel, 1, 0)
-            self.ruleview.setLayout(ruleviewergrid)
-            self.ruleview.exec_()
+            ruleeditgrid = QtGui.QGridLayout()
+            ruleeditgrid.addWidget(namelabel, 0, 0)
+            ruleeditgrid.addWidget(self.namelineedit, 0, 1)
+            ruleeditgrid.addWidget(timelabel, 1, 0)
+            ruleeditgrid.addWidget(self.timeedit, 1, 1)
+            ruleeditgrid.addWidget(self.timescaleedit,1, 2)
+            ruleeditgrid.addWidget(self.foldereditcheck, 2, 0)
+            ruleeditgrid.addWidget(savebutton, 3, 1)
+            ruleeditgrid.addWidget(closebutton, 3, 2)
+            self.ruleedit.setLayout(ruleeditgrid)
+            self.ruleedit.exec_()
 
+    def editRuleHelper(self):
+        folder = self.ruleeditfolder
+        name = self.namelineedit.text()
+        self.deleteRule()
+        self.ruleedit.accept()
+        pathobject = self.folderlist.selectedItems()
+        saved = woodhouse.saverules(folder, name,
+                                    self.timeedit.text(),
+                                    self.timescaleedit.currentText(),
+                                    self.foldereditcheck.isChecked())
+        if saved == 'OK':
+            self.addRule(name, folder)
+        
 
     def deleteRule(self):
 
