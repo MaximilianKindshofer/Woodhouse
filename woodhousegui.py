@@ -11,6 +11,20 @@ class MainWindow(QtGui.QWidget):
     def initui(self):
         self.deactivatedicon = QtGui.QPixmap('deactive.png')
         self.activatedicon = QtGui.QPixmap('active.png')
+        self.woodhouseicon = QtGui.QIcon(QtGui.QPixmap('woodhouse.png'))
+        self.systray = QtGui.QSystemTrayIcon(self.woodhouseicon)
+        self.systray.setVisible(True)
+        self.systray.activated.connect(self.iconActivated)
+        
+        #Context Menu for TrayIcon
+        self.contextmenu = QtGui.QMenu()
+        self.restore = QtGui.QAction("Restore", self,triggered=self.showNormal)
+        self.quitaction = QtGui.QAction("Quit", self, triggered=QtGui.qApp.quit)
+        self.contextmenu.addAction(self.quitaction)
+        self.contextmenu.addAction(self.restore)
+        self.systray.setContextMenu(self.contextmenu)
+        
+
         self.setWindowTitle('Woodhouse')
         self.setGeometry(300, 300, 250, 350)
 
@@ -65,6 +79,18 @@ class MainWindow(QtGui.QWidget):
         self.setLayout(self.grid)
         self.show()
         
+    def closeEvent(self, event):
+        self.hide()
+        msg = "Systray The program will keep running in the system tray. To terminate the program, choose 'Quit' in the context menu of the system tray entry."
+        self.systray.showMessage("Close to Tray", msg)
+        event.ignore()
+    
+    def iconActivated(self, reason):
+        if reason == QtGui.QSystemTrayIcon.DoubleClick:
+            self.show()
+        else:
+            self.systray.contextMenu()
+
     def ruleenabled(self, current):
         rule = current.text()
         folder = current.toolTip()

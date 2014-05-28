@@ -10,3 +10,7 @@ It is intendet to delete old files which you didn't touch a long time.
 Think about your download folder, wouldn't it be nice to auto-delete all
 files older than a month? Or your tmp folder? 
 
+Woodhouse Icon
+
+http://ddrago.deviantart.com/
+http://findicons.com/icon/229377/home?id=229389
