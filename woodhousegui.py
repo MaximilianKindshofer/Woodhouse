@@ -6,11 +6,11 @@ class MainWindow(QtGui.QWidget):
     def __init__(self):
         super(MainWindow, self).__init__()
         self.initui()
-        self.folder = ''
-        #TODO: Load Folders on Startup if config file exists
         QtCore.QTimer.singleShot(0, self.garbageloop)
 
     def initui(self):
+        self.deactivatedicon = QtGui.QPixmap('deactive.png')
+        self.activatedicon = QtGui.QPixmap('active.png')
         self.setWindowTitle('Woodhouse')
         self.setGeometry(300, 300, 250, 350)
 
@@ -86,11 +86,14 @@ class MainWindow(QtGui.QWidget):
             msgBox.exec_()
         else:
             woodhouse.toggleactivateRule(folder, rulename[0])
+            item = rule[0]
             if woodhouse.showruleactive(folder, rulename[0]) == "True":
                 self.ruleenabledbutton.setText("Disable")
+                item.setIcon(self.activatedicon)
             else:
                 self.ruleenabledbutton.setText("Enable")
-        
+                item.setIcon(self.deactivatedicon)
+
 
     def addFolder(self):
         # select Folder and display it
@@ -231,6 +234,10 @@ class MainWindow(QtGui.QWidget):
             # the item you dont select a folder. It might be handy later
             # to just show the items belonging to one folder
             newItem.setToolTip(folder)
+            if woodhouse.showruleactive(folder, label) == "True":
+                newItem.setIcon(self.activatedicon)
+            else:
+                newItem.setIcon(self.deactivatedicon)
             self.rulelist.addItem(newItem)
 
     def viewRule(self):
