@@ -31,7 +31,7 @@ def deleterules(folder, rulename):
     with open('rules.conf', 'w') as config_file:
         config.write(config_file)
     return 'OK'
-    
+
 def toggleactivateRule(folder, rulename):
     config = configparser.ConfigParser()
     config.read('rules.conf')
@@ -43,7 +43,7 @@ def toggleactivateRule(folder, rulename):
     with open('rules.conf', 'w') as config_file:
         config.write(config_file)
     return 'OK'
-    
+
 def getRules(folder):
     #returns a list of rulenames corresponding to the folder
     listofrules = []
@@ -98,7 +98,7 @@ def showruleactive(folder, name):
     config = configparser.ConfigParser()
     config.read('rules.conf')
     section = str(folder + '::' + name)
-    return config[section]['activated'] 
+    return config[section]['activated']
 
 def testrules():
     pass

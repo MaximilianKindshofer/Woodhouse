@@ -15,15 +15,15 @@ class MainWindow(QtGui.QWidget):
         self.systray = QtGui.QSystemTrayIcon(self.woodhouseicon)
         self.systray.setVisible(True)
         self.systray.activated.connect(self.iconActivated)
-        
+
         #Context Menu for TrayIcon
         self.contextmenu = QtGui.QMenu()
-        self.restore = QtGui.QAction("Restore", self,triggered=self.showNormal)
         self.quitaction = QtGui.QAction("Quit", self, triggered=QtGui.qApp.quit)
-        self.contextmenu.addAction(self.quitaction)
+        self.restore = QtGui.QAction("Restore", self,triggered=self.showNormal)
         self.contextmenu.addAction(self.restore)
+        self.contextmenu.addAction(self.quitaction)
         self.systray.setContextMenu(self.contextmenu)
-        
+
 
         self.setWindowTitle('Woodhouse')
         self.setGeometry(300, 300, 250, 350)
@@ -78,13 +78,13 @@ class MainWindow(QtGui.QWidget):
         self.grid.addWidget(self.ruleenabledbutton, 2, 7)
         self.setLayout(self.grid)
         self.show()
-        
+
     def closeEvent(self, event):
         self.hide()
         msg = "Systray The program will keep running in the system tray. To terminate the program, choose 'Quit' in the context menu of the system tray entry."
         self.systray.showMessage("Close to Tray", msg)
         event.ignore()
-    
+
     def iconActivated(self, reason):
         if reason == QtGui.QSystemTrayIcon.DoubleClick:
             self.show()
@@ -99,7 +99,7 @@ class MainWindow(QtGui.QWidget):
             self.ruleenabledbutton.setText('Enable')
         else:
             self.ruleenabledbutton.setText('Disable')
-            
+
     def togglerule(self):
         rule = self.rulelist.selectedItems()
         rulename = [r.text() for r in rule]
@@ -288,10 +288,7 @@ class MainWindow(QtGui.QWidget):
             self.timeedit.setText(woodhouse.showruletime(folder, rulename[0]))
             self.timescaleedit = QtGui.QComboBox()
             self.timescaleedit.insertItems(0,['days','months','years'])
-            print(rulename[0])
-            print(folder)
             item = woodhouse.showruletimescale(folder, rulename[0])
-            print(item)
             if item == 'days':
                 index = 1
             elif item == 'months':
@@ -335,7 +332,7 @@ class MainWindow(QtGui.QWidget):
                                     self.foldereditcheck.isChecked())
         if saved == 'OK':
             self.addRule(name, folder)
-        
+
 
     def deleteRule(self):
 
