@@ -112,11 +112,19 @@ def clean():
         config.read('rules.conf')
         sections = config.sections()
         for s in sections:
-            if config[s][activated] == "True":
+            if config[s]['activated'] == "True":
                 nameandfolder = s.split('::')
-                name = nameandfolder[0]
-                folder = nameandfolder[1]
-
+                name = nameandfolder[1]
+                folder = nameandfolder[0]
+                files = os.listdir(folder)
+                walks = os.walk(folder)
+                print(files)
+                #TODO: Read the Docs to walk, there is an example which
+                #Can be Utilized
+                print(walks)
+                for items in files:
+                    modified = time.ctime(os.path.getmtime(folder+'/'+items))
+                    print(modified)
 
 def main():
     app = QtGui.QApplication(sys.argv)
