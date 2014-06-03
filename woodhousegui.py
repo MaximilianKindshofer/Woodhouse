@@ -81,7 +81,7 @@ class MainWindow(QtGui.QWidget):
 
     def closeEvent(self, event):
         self.hide()
-        msg = "Systray The program will keep running in the system tray. To terminate the program, choose 'Quit' in the context menu of the system tray entry."
+        msg = "The program will keep running in the system tray. To terminate the program, choose 'Quit' in the context menu of the system tray entry."
         self.systray.showMessage("Close to Tray", msg)
         event.ignore()
 
@@ -358,9 +358,9 @@ class MainWindow(QtGui.QWidget):
                 pass
         finally:
             #Launch every 30 Minutes
-            #QtCore.QTimer.singleShot(1800000, self.garbageloop)
+            QtCore.QTimer.singleShot(1800000, self.garbageloop)
             #Launch every 30 Seconds for Testing
-            QtCore.QTimer.singleShot(30000, self.garbageloop)
+            #QtCore.QTimer.singleShot(30000, self.garbageloop)
     def ruleTest(self):
         pass
 

@@ -110,6 +110,12 @@ def clean():
         print('I was activated')
         config = configparser.ConfigParser()
         config.read('rules.conf')
+        sections = config.sections()
+        for s in sections:
+            if config[s][activated] == "True":
+                nameandfolder = s.split('::')
+                name = nameandfolder[0]
+                folder = nameandfolder[1]
 
 
 def main():
