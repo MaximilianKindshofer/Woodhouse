@@ -103,28 +103,119 @@ def showruleactive(folder, name):
 def testrules():
     pass
 
-def clean():
+def clean(test=False, folder=None):
     if not os.path.exists('rules.conf'):
-        return 'There are no rules!'
+        pass
     else:
-        print('I was activated')
+        #seconds since the last epoch
+        systemtime = time.time()
         config = configparser.ConfigParser()
         config.read('rules.conf')
         sections = config.sections()
-        for s in sections:
-            if config[s]['activated'] == "True":
-                nameandfolder = s.split('::')
-                name = nameandfolder[1]
-                folder = nameandfolder[0]
-                files = os.listdir(folder)
-                walks = os.walk(folder)
-                print(files)
-                #TODO: Read the Docs to walk, there is an example which
-                #Can be Utilized
-                print(walks)
-                for items in files:
-                    modified = time.ctime(os.path.getmtime(folder+'/'+items))
-                    print(modified)
+        todelete = []
+        if test == False:
+            for s in sections:
+                if config[s]['activated'] == "True":
+                    nameandfolder = s.split('::')
+                    name = nameandfolder[1]
+                    folder = nameandfolder[0]
+                    bestbeforetime = float(config[s]['time'])
+                    bestbeforescale = config[s]['timescale']
+                    
+                    #converting the time scale to seconds and multiply them time
+                    if bestbeforescale == 'days':
+                        #a day has 86400 seconds
+                        bestbeforedelta = bestbeforetime * 86400
+                    elif bestbeforescale == 'months':
+                        #a month has 2628000 seconds
+                        bestbeforedelta = bestbeforetime * 2628000
+                    elif bestbeforescale == 'year':
+                        #a year has 31536000 seconds
+                        bestbeforedelta = bestbeforetime * 31536000
+                        
+                    if config[s]['Subfolder'] == "False":
+                        sublevel = 0
+                    else:
+                        sublevel = 255
+                    #https://stackoverflow.com/questions/229186/os-walk-without-digging-into-directories-below
+                    for (path, dirs, files) in walklevel(folder, sublevel):
+                        if sublevel !=0:
+                            for items in files:
+                                fullpath = os.path.join(path,items)
+                                #lastmodified in seconds since the last epoch
+                                lastmodified = os.path.getmtime(fullpath)
+                                bestbefore = lastmodified + bestbeforedelta
+                                if bestbefore <= systemtime:
+                                    print(fullpath)
+                                    os.remove(fullpath)
+                            
+                                #delete folders
+                                for items in dirs:
+                                    fullpath = os.path.join(path,items)
+                                    lastmodified = os.path.getmtime(fullpath)
+                                    bestbefore = lastmodified + bestbeforedelta
+                                    if bestbefore <= systemtime:
+                                        os.rmdir(fullpath)
+                                    else:
+                                        pass
+                        else:
+                            for items in files:
+                                fullpath = os.path.join(path,items)
+                                #lastmodified in seconds since the last epoch
+                                lastmodified = os.path.getmtime(fullpath)
+                                bestbefore = lastmodified + bestbeforedelta
+                                if bestbefore <= systemtime:
+                                    print(fullpath)
+                                    os.remove(fullpath)
+
+        if test == True:
+            for s in sections:
+                if folder in s:
+                    nameandfolder = s.split('::')
+                    name = nameandfolder[1]
+                    folder = nameandfolder[0]
+                    bestbeforetime = float(config[s]['time'])
+                    bestbeforescale = config[s]['timescale']
+                    
+                    #converting the time scale to seconds and multiply them time
+                    if bestbeforescale == 'days':
+                        #a day has 86400 seconds
+                        bestbeforedelta = bestbeforetime * 86400
+                    elif bestbeforescale == 'months':
+                        #a month has 2628000 seconds
+                        bestbeforedelta = bestbeforetime * 2628000
+                    elif bestbeforescale == 'year':
+                        #a year has 31536000 seconds
+                        bestbeforedelta = bestbeforetime * 31536000
+                        
+                    if config[s]['Subfolder'] == "False":
+                        sublevel = 0
+                    else:
+                        sublevel = 255
+                    #https://stackoverflow.com/questions/229186/os-walk-without-digging-into-directories-below
+                    for (path, dirs, files) in walklevel(folder, sublevel):
+                        #subfolders included
+                        for items in files:
+                            fullpath = os.path.join(path,items)
+                            #lastmodified in seconds since the last epoch
+                            lastmodified = os.path.getmtime(fullpath)
+                            bestbefore = lastmodified + bestbeforedelta
+                            if bestbefore <= systemtime:
+                                todelete.append(fullpath)
+                            else:
+                                pass
+            return todelete
+                
+def walklevel(some_dir, level=1):
+    #https://stackoverflow.com/questions/229186/os-walk-without-digging-into-directories-below
+    some_dir = some_dir.rstrip(os.path.sep)
+    assert os.path.isdir(some_dir)
+    num_sep = some_dir.count(os.path.sep)
+    for root, dirs, files in os.walk(some_dir, topdown=False):
+        yield root, dirs, files
+        num_sep_this = root.count(os.path.sep)
+        if num_sep + level <= num_sep_this:
+            del dirs[:]
 
 def main():
     app = QtGui.QApplication(sys.argv)
