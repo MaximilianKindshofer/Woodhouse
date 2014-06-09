@@ -367,7 +367,7 @@ class MainWindow(QtGui.QWidget):
             if os.path.exists('rules.conf'):
                 msg = "Woodhouse performs cleaning tasks"
                 self.systray.showMessage("Cleaning", msg)
-                woodhouse.clean()
+                woodhouse.clean(False)
             else:
                 pass
         finally:
@@ -387,7 +387,7 @@ class MainWindow(QtGui.QWidget):
             msgBox.exec_()
         else:
             
-            delete = woodhouse.clean(True, folder)
+            delete = woodhouse.testrules( folder)
             ruledelete = []
             text = "Items that should be deleted: \n"
             for items in delete:

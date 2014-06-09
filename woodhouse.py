@@ -100,10 +100,56 @@ def showruleactive(folder, name):
     section = str(folder + '::' + name)
     return config[section]['activated']
 
-def testrules():
-    pass
-
-def clean(test=False, folder=None):
+def testrules(folder):
+    systemtime = time.time()
+    config = configparser.ConfigParser()
+    config.read('rules.conf')
+    for s in config.sections():
+        if folder in s:
+            nameandfolder = s.split('::')
+            folder = nameandfolder[0]
+            bestbeforetime = float(config[s]['time'])
+            bestbeforescale = config[s]['timescale']
+            #converting the time scale to seconds and multiply them time
+            if bestbeforescale == 'days':
+                #a day has 86400 seconds
+                bestbeforedelta = bestbeforetime * 86400
+            elif bestbeforescale == 'months':
+                #a month has 2628000 seconds
+                bestbeforedelta = bestbeforetime * 2628000
+            elif bestbeforescale == 'years':
+                #a year has 31536000 seconds
+                bestbeforedelta = bestbeforetime * 31536000
+            if config[s]['Subfolder'] == 'False':
+                onlyfiles = []
+                for files in os.listdir(folder):
+                    if os.path.isfile(os.path.join(folder, files)) == True:
+                        fullpath = os.path.join(folder, files)
+                        lastmodified = os.path.getmtime(fullpath)
+                        bestbefore = lastmodified + bestbeforedelta
+                        if bestbefore <= systemtime:
+                            onlyfiles.append(fullpath)
+                return onlyfiles
+            else:
+                filesandfolders = []
+                for root, dirs ,files in os.walk(folder):
+                    for name in files:
+                        fullpath = os.path.join(root, name)
+                        lastmodified = os.path.getmtime(fullpath)
+                        bestbefore = lastmodified + bestbeforedelta
+                        if bestbefore <= systemtime:
+                            filesandfolders.append(fullpath)
+                    for name in dirs:
+                        fullpath = os.path.join(root, name)
+                        lastmodified = os.path.getmtime(fullpath)
+                        bestbefore = lastmodified + bestbeforedelta
+                        if bestbefore <= systemtime:
+                            filesandfolders.append(fullpath)
+                return filesandfolders
+                
+                
+            
+def clean(test=True):
     if not os.path.exists('rules.conf'):
         pass
     else:
@@ -132,90 +178,30 @@ def clean(test=False, folder=None):
                     elif bestbeforescale == 'years':
                         #a year has 31536000 seconds
                         bestbeforedelta = bestbeforetime * 31536000
-
-                    if config[s]['Subfolder'] == "False":
-                        sublevel = 0
-                    else:
-                        sublevel = 255
-                    #https://stackoverflow.com/questions/229186/os-walk-without-digging-into-directories-below
-                    for (path, dirs, files) in walklevel(folder, sublevel):
-                        if sublevel !=0:
-                            for items in files:
-                                fullpath = os.path.join(path,items)
-                                #lastmodified in seconds since the last epoch
+                    
+                    if config[s]['Subfolder'] == 'False':
+                        for files in os.listdir(folder):
+                            if os.path.isfile(os.path.join(folder, files)) == True:
+                                fullpath = os.path.join(folder, files)
                                 lastmodified = os.path.getmtime(fullpath)
                                 bestbefore = lastmodified + bestbeforedelta
                                 if bestbefore <= systemtime:
-                                    print(fullpath)
                                     os.remove(fullpath)
-
-                                #delete folders
-                            for items in dirs:
-                                    fullpath = os.path.join(path,items)
-                                    lastmodified = os.path.getmtime(fullpath)
-                                    bestbefore = lastmodified + bestbeforedelta
-                                    if bestbefore <= systemtime:
-                                        os.rmdir(fullpath)
-                                    else:
-                                        pass
-                        else:
-                            for items in files:
-                                fullpath = os.path.join(path,items)
-                                #lastmodified in seconds since the last epoch
+                    else:
+                        for root, dirs ,files in os.walk(folder, topdown = False):
+                            for name in files:
+                                fullpath = os.path.join(root, name)
                                 lastmodified = os.path.getmtime(fullpath)
                                 bestbefore = lastmodified + bestbeforedelta
                                 if bestbefore <= systemtime:
-                                    print(fullpath)
                                     os.remove(fullpath)
+                            for name in dirs:
+                                fullpath = os.path.join(root, name)
+                                lastmodified = os.path.getmtime(fullpath)
+                                bestbefore = lastmodified + bestbeforedelta
+                                if bestbefore <= systemtime:
+                                    os.rmdir(fullpath)
 
-        if test == True:
-            for s in sections:
-                if folder in s:
-                    nameandfolder = s.split('::')
-                    name = nameandfolder[1]
-                    folder = nameandfolder[0]
-                    bestbeforetime = float(config[s]['time'])
-                    bestbeforescale = config[s]['timescale']
-
-                    #converting the time scale to seconds and multiply them time
-                    if bestbeforescale == 'days':
-                        #a day has 86400 seconds
-                        bestbeforedelta = bestbeforetime * 86400
-                    elif bestbeforescale == 'months':
-                        #a month has 2628000 seconds
-                        bestbeforedelta = bestbeforetime * 2628000
-                    elif bestbeforescale == 'years':
-                        #a year has 31536000 seconds
-                        bestbeforedelta = bestbeforetime * 31536000
-
-                    if config[s]['Subfolder'] == "False":
-                        sublevel = 0
-                    else:
-                        sublevel = 255
-                    #https://stackoverflow.com/questions/229186/os-walk-without-digging-into-directories-below
-                    for (path, dirs, files) in walklevel(folder, sublevel):
-                    #subfolders included
-                        for items in files:
-                            fullpath = os.path.join(path,items)
-                            #lastmodified in seconds since the last epoch
-                            lastmodified = os.path.getmtime(fullpath)
-                            bestbefore = lastmodified + bestbeforedelta
-                            if bestbefore <= systemtime:
-                                 todelete.append(fullpath)
-                            else:
-                                pass
-            return todelete
-
-def walklevel(some_dir, level=0):
-    #https://stackoverflow.com/questions/229186/os-walk-without-digging-into-directories-below
-    some_dir = some_dir.rstrip(os.path.sep)
-    assert os.path.isdir(some_dir)
-    num_sep = some_dir.count(os.path.sep)
-    for root, dirs, files in os.walk(some_dir, topdown=False):
-        yield root, dirs, files
-        num_sep_this = root.count(os.path.sep)
-        if num_sep + level <= num_sep_this:
-            del dirs[:]
 
 def main():
     app = QtGui.QApplication(sys.argv)
