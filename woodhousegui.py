@@ -1,15 +1,31 @@
 from PySide import QtGui, QtCore
-import sys, woodhouse
+import sys, woodhouse, os
 
 class MainWindow(QtGui.QWidget):
 
     def __init__(self):
         super(MainWindow, self).__init__()
         self.initui()
-        self.folder = ''
-        #TODO: Load Folders on Startup if config file exists
+        QtCore.QTimer.singleShot(100, self.garbageloop)
 
     def initui(self):
+        self.deactivatedicon = QtGui.QPixmap('deactive.png')
+        self.activatedicon = QtGui.QPixmap('active.png')
+        self.woodhouseicon = QtGui.QIcon(QtGui.QPixmap('woodhouse.png'))
+        self.setWindowIcon(self.woodhouseicon)
+        self.systray = QtGui.QSystemTrayIcon(self.woodhouseicon)
+        self.systray.setVisible(True)
+        self.systray.activated.connect(self.iconActivated)
+
+        #Context Menu for TrayIcon
+        self.contextmenu = QtGui.QMenu()
+        self.quitaction = QtGui.QAction("Quit", self, triggered=QtGui.qApp.quit)
+        self.restore = QtGui.QAction("Restore", self,triggered=self.showNormal)
+        self.contextmenu.addAction(self.restore)
+        self.contextmenu.addAction(self.quitaction)
+        self.systray.setContextMenu(self.contextmenu)
+
+
         self.setWindowTitle('Woodhouse')
         self.setGeometry(300, 300, 250, 350)
 
@@ -20,13 +36,14 @@ class MainWindow(QtGui.QWidget):
         #add folders from rules.conf
         for folder in woodhouse.getFolders():
             QtGui.QListWidgetItem(folder, self.folderlist)
+        #TODO: use the current and previouse variable to get names
         self.folderlist.currentItemChanged.connect(self.viewActiveFolderRules)
 
         folderaddbutton = QtGui.QPushButton('Add',self)
         folderaddbutton.clicked.connect(self.addFolder)
         folderdeletebutton = QtGui.QPushButton('Delete', self)
         folderdeletebutton.clicked.connect(self.deleteFolder)
-        
+
         # the right side of the window with the rules
         rulebar = QtGui.QLabel('Rules')
         self.rulelist = QtGui.QListWidget(self)
@@ -39,7 +56,9 @@ class MainWindow(QtGui.QWidget):
         ruledeletebutton.clicked.connect(self.deleteRule)
         ruletestbutton = QtGui.QPushButton('Test Rule', self)
         ruletestbutton.clicked.connect(self.ruleTest)
-
+        self.ruleenabledbutton = QtGui.QPushButton('Enable', self)
+        self.ruleenabledbutton.clicked.connect(self.togglerule)
+        self.rulelist.itemPressed.connect(self.ruleenabled)
         # GridLayout
 
         # left side
@@ -56,13 +75,59 @@ class MainWindow(QtGui.QWidget):
         self.grid.addWidget(ruleaddbutton, 2, 3)
         self.grid.addWidget(ruleviewbutton, 2, 4)
         self.grid.addWidget(ruledeletebutton, 2, 5)
-        self.grid.addWidget(ruletestbutton,2 , 6)
+        self.grid.addWidget(ruletestbutton, 2 , 6)
+        self.grid.addWidget(self.ruleenabledbutton, 2, 7)
         self.setLayout(self.grid)
         self.show()
+
+    def closeEvent(self, event):
+        self.hide()
+        msg = "The program will keep running in the system tray. To terminate the program, choose 'Quit' in the context menu of the system tray entry."
+        self.systray.showMessage("Close to Tray", msg)
+        event.ignore()
+
+    def iconActivated(self, reason):
+        if reason == QtGui.QSystemTrayIcon.DoubleClick:
+            self.show()
+        else:
+            self.systray.contextMenu()
+
+    def ruleenabled(self):
+        rule = self.rulelist.currentItem()
+        rulename = rule.text()
+        folder = rule.toolTip()
+        ruleenabled = woodhouse.showruleactive(folder, rulename)
+        if ruleenabled == 'False':
+            self.ruleenabledbutton.setText('Enable')
+        else:
+            self.ruleenabledbutton.setText('Disable')
+
+    def togglerule(self):
+        rule = self.rulelist.selectedItems()
+        rulename = [r.text() for r in rule]
+        for item in rule:
+            folder = item.toolTip()
+        if rulename == []:
+            msgBox = QtGui.QMessageBox()
+            msgBox.setWindowIcon(self.woodhouseicon)
+            msgBox.setWindowTitle('Select a rule')
+            msgBox.setText('Please select rule')
+            msgBox.exec_()
+        else:
+            woodhouse.toggleactivateRule(folder, rulename[0])
+            item = rule[0]
+            if woodhouse.showruleactive(folder, rulename[0]) == "True":
+                self.ruleenabledbutton.setText("Disable")
+                item.setIcon(self.activatedicon)
+            else:
+                self.ruleenabledbutton.setText("Enable")
+                item.setIcon(self.deactivatedicon)
+
 
     def addFolder(self):
         # select Folder and display it
         folderselect = QtGui.QFileDialog()
+        folderselect.setWindowIcon(self.woodhouseicon)
         folderselect.setFileMode(QtGui.QFileDialog.Directory)
         folderselect.setOption(QtGui.QFileDialog.ShowDirsOnly)
         if folderselect.exec_():
@@ -71,7 +136,7 @@ class MainWindow(QtGui.QWidget):
             # the data in a new variable cause we want to
             # give the folder variable to an other function later
             # it has the form of
-            # ['u/path/to/blerg'] we slice the first 3 and the
+            # ['/path/to/blerg'] we slice the first 2 and the
             # last 2
             showfolder = self.folder
             showfolder = str(showfolder)[2:-2]
@@ -110,7 +175,7 @@ class MainWindow(QtGui.QWidget):
         rulelist = woodhouse.getRules(folder)
         for rule in rulelist:
             self.addRule(rule, activeFolder.text())
-            
+
     def configRule(self):
         # Configurate Rules and calls the addRuleHelper function
         #
@@ -121,11 +186,13 @@ class MainWindow(QtGui.QWidget):
         foldername = self.folderlist.selectedItems()
         if foldername == []:
             msgBox = QtGui.QMessageBox()
+            msgBox.setWindowIcon(self.woodhouseicon)
             msgBox.setWindowTitle('No selected Folder')
             msgBox.setText("Choose a Folder to apply rules to.")
             msgBox.exec_()
         else:
             self.ruleset = QtGui.QDialog(self)
+            self.ruleset.setWindowIcon(self.woodhouseicon)
             # how to get the folders humanreadabel text (label)
             # http://stackoverflow.com/questions/12087715/pyqt4-get-list-of-all-labels-in-qlistwidget
             # again this could be more elegant but since I got the list from
@@ -135,7 +202,7 @@ class MainWindow(QtGui.QWidget):
             self.ruleset.setWindowTitle(title[0] + " rule set")
             namelabel = QtGui.QLabel('Name of the rule: ')
             self.nameline = QtGui.QLineEdit()
-            timelabel = QtGui.QLabel('Delete files older than')
+            timelabel = QtGui.QLabel('Delete files not modified more then')
             self.time = QtGui.QLineEdit()
             self.time.setInputMask("999")
             self.timescale = QtGui.QComboBox()
@@ -163,6 +230,7 @@ class MainWindow(QtGui.QWidget):
         #get the text from configRule's QLineEdit
         if self.nameline.text() == '':
             msgBox = QtGui.QMessageBox()
+            msgBox.setWindowIcon(self.woodhouseicon)
             msgBox.setWindowTitle('Name rule')
             msgBox.setText('Please name your rule')
             msgBox.exec_()
@@ -170,12 +238,14 @@ class MainWindow(QtGui.QWidget):
         elif len(self.rulelist.findItems(self.nameline.text(),
                                          QtCore.Qt.MatchExactly)) != 0:
             msgBox = QtGui.QMessageBox()
+            msgBox.setWindowIcon(self.woodhouseicon)
             msgBox.setWindowTitle('Duplicate rule')
             msgBox.setText('Please use an other name')
             msgBox.exec_()
         #check if time is set
         elif self.time.text() == '':
             msgBox = QtGui.QMessageBox()
+            msgBox.setWindowIcon(self.woodhouseicon)
             msgBox.setWindowTitle('Enter a Time')
             msgBox.setText('Enter a valid Time range')
             msgBox.exec_()
@@ -199,6 +269,10 @@ class MainWindow(QtGui.QWidget):
             # the item you dont select a folder. It might be handy later
             # to just show the items belonging to one folder
             newItem.setToolTip(folder)
+            if woodhouse.showruleactive(folder, label) == "True":
+                newItem.setIcon(self.activatedicon)
+            else:
+                newItem.setIcon(self.deactivatedicon)
             self.rulelist.addItem(newItem)
 
     def viewRule(self):
@@ -209,33 +283,74 @@ class MainWindow(QtGui.QWidget):
             folder = item.toolTip()
         if rulename == []:
             msgBox = QtGui.QMessageBox()
+            msgBox.setWindowIcon(self.woodhouseicon)
             msgBox.setWindowTitle('Select a rule')
             msgBox.setText('Please select rule')
             msgBox.exec_()
         else:
-            self.ruleview = QtGui.QDialog(self)
-            self.ruleview.setWindowTitle(rulename[0])
-            timelabel = QtGui.QLabel('Delete files older than ' + 
-                                     woodhouse.showruletime(folder, rulename[0]) + 
-                                     ' ' + woodhouse.showruletimescale(folder, rulename[0]))
+            self.ruleedit = QtGui.QDialog(self)
+            self.ruleedit.setWindowIcon(self.woodhouseicon)
+            namelabel = QtGui.QLabel('Name of the rule: ')
+            self.namelineedit = QtGui.QLineEdit()
+            self.namelineedit.setText(rulename[0])
+            timelabel = QtGui.QLabel('Delete files not modified more then')
+            self.timeedit = QtGui.QLineEdit()
+            self.timeedit.setInputMask("999")
+            self.timeedit.setText(woodhouse.showruletime(folder, rulename[0]))
+            self.timescaleedit = QtGui.QComboBox()
+            self.timescaleedit.insertItems(0,['days','months','years'])
+            item = woodhouse.showruletimescale(folder, rulename[0])
+            if item == 'days':
+                index = 0
+            elif item == 'months':
+                index = 1
+            elif item == 'years':
+                index = 2
+            self.timescaleedit.setCurrentIndex(index)
+            self.foldereditcheck = QtGui.QCheckBox('Include containing folders',self)
             if woodhouse.showrulesubfolder(folder, rulename[0]) == 'True':
-                subfolder = ' including subfolders'
+                state = QtCore.Qt.Checked
             else:
-                subfolder = ' not including subfolders'
-            folderlabel = QtGui.QLabel('In Folder ' +  folder + subfolder)
+                state = QtCore.Qt.Unchecked
+            self.foldereditcheck.setCheckState(state)
+            savebutton = QtGui.QPushButton('Save',self)
+            self.ruleeditfolder = folder
+            savebutton.clicked.connect(self.editRuleHelper)
+            closebutton = QtGui.QPushButton('Close',self)
+            closebutton.clicked.connect(self.ruleedit.accept)
             #Grid for the rule window
-            ruleviewergrid = QtGui.QGridLayout()
-            ruleviewergrid.addWidget(timelabel, 0, 0)
-            ruleviewergrid.addWidget(folderlabel, 1, 0)
-            self.ruleview.setLayout(ruleviewergrid)
-            self.ruleview.exec_()
-            
-        
+            ruleeditgrid = QtGui.QGridLayout()
+            ruleeditgrid.addWidget(namelabel, 0, 0)
+            ruleeditgrid.addWidget(self.namelineedit, 0, 1)
+            ruleeditgrid.addWidget(timelabel, 1, 0)
+            ruleeditgrid.addWidget(self.timeedit, 1, 1)
+            ruleeditgrid.addWidget(self.timescaleedit,1, 2)
+            ruleeditgrid.addWidget(self.foldereditcheck, 2, 0)
+            ruleeditgrid.addWidget(savebutton, 3, 1)
+            ruleeditgrid.addWidget(closebutton, 3, 2)
+            self.ruleedit.setLayout(ruleeditgrid)
+            self.ruleedit.exec_()
+
+    def editRuleHelper(self):
+        folder = self.ruleeditfolder
+        name = self.namelineedit.text()
+        self.deleteRule()
+        self.ruleedit.accept()
+        pathobject = self.folderlist.selectedItems()
+        saved = woodhouse.saverules(folder, name,
+                                    self.timeedit.text(),
+                                    self.timescaleedit.currentText(),
+                                    self.foldereditcheck.isChecked())
+        if saved == 'OK':
+            self.addRule(name, folder)
+
+
     def deleteRule(self):
-        
+
         nameobject = self.rulelist.selectedItems()
         if nameobject == []:
             msgBox = QtGui.QMessageBox()
+            msgBox.setWindowIcon(self.woodhouseicon)
             msgBox.setWindowTitle('No rule selected')
             msgBox.setText('Please select a rule to delete.')
             msgBox.exec_()
@@ -247,8 +362,45 @@ class MainWindow(QtGui.QWidget):
                 for selectedRule in self.rulelist.selectedItems():
                     self.rulelist.takeItem(self.rulelist.row(selectedRule))
 
+    def garbageloop(self):
+        try:
+            if os.path.exists('rules.conf'):
+                msg = "Woodhouse performs cleaning tasks"
+                self.systray.showMessage("Cleaning", msg)
+                woodhouse.clean(False)
+            else:
+                pass
+        finally:
+            #Launch every 30 Minutes
+            QtCore.QTimer.singleShot(1800000, self.garbageloop)
+            #Launch every 30 Seconds for Testing
+            #QtCore.QTimer.singleShot(30000, self.garbageloop)
     def ruleTest(self):
-        pass
+        rule = self.rulelist.selectedItems()
+        rulename = [r.text() for r in rule]
+        folder = rule[0].toolTip()
+        if rulename == []:
+            msgBox = QtGui.QMessageBox()
+            msgBox.setWindowIcon(self.woodhouseicon)
+            msgBox.setWindowTitle('No rule selected')
+            msgBox.setText('Please select a rule to delete.')
+            msgBox.exec_()
+        else:
+            
+            delete = woodhouse.testrules( folder)
+            ruledelete = []
+            text = "Items that should be deleted: \n"
+            for items in delete:
+                if folder in items:
+                    ruledelete.append(items)
+                    text = text + str(items) + '\n'
+            msgBox = QtGui.QMessageBox()
+            msgBox.setWindowIcon(self.woodhouseicon)
+            msgBox.setWindowTitle('Items to delete')
+            #tailing spaces since msgBox ignores setGeometry
+            msgBox.setText('There are ' + str(len(ruledelete)) + ' items to be deleted                     ')
+            msgBox.setDetailedText(text)
+            msgBox.exec_()
 
 def main():
 
