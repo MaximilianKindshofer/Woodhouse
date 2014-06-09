@@ -121,7 +121,7 @@ def clean(test=False, folder=None):
                     folder = nameandfolder[0]
                     bestbeforetime = float(config[s]['time'])
                     bestbeforescale = config[s]['timescale']
-                    
+
                     #converting the time scale to seconds and multiply them time
                     if bestbeforescale == 'days':
                         #a day has 86400 seconds
@@ -129,10 +129,10 @@ def clean(test=False, folder=None):
                     elif bestbeforescale == 'months':
                         #a month has 2628000 seconds
                         bestbeforedelta = bestbeforetime * 2628000
-                    elif bestbeforescale == 'year':
+                    elif bestbeforescale == 'years':
                         #a year has 31536000 seconds
                         bestbeforedelta = bestbeforetime * 31536000
-                        
+
                     if config[s]['Subfolder'] == "False":
                         sublevel = 0
                     else:
@@ -148,9 +148,9 @@ def clean(test=False, folder=None):
                                 if bestbefore <= systemtime:
                                     print(fullpath)
                                     os.remove(fullpath)
-                            
+
                                 #delete folders
-                                for items in dirs:
+                            for items in dirs:
                                     fullpath = os.path.join(path,items)
                                     lastmodified = os.path.getmtime(fullpath)
                                     bestbefore = lastmodified + bestbeforedelta
@@ -176,7 +176,7 @@ def clean(test=False, folder=None):
                     folder = nameandfolder[0]
                     bestbeforetime = float(config[s]['time'])
                     bestbeforescale = config[s]['timescale']
-                    
+
                     #converting the time scale to seconds and multiply them time
                     if bestbeforescale == 'days':
                         #a day has 86400 seconds
@@ -184,29 +184,29 @@ def clean(test=False, folder=None):
                     elif bestbeforescale == 'months':
                         #a month has 2628000 seconds
                         bestbeforedelta = bestbeforetime * 2628000
-                    elif bestbeforescale == 'year':
+                    elif bestbeforescale == 'years':
                         #a year has 31536000 seconds
                         bestbeforedelta = bestbeforetime * 31536000
-                        
+
                     if config[s]['Subfolder'] == "False":
                         sublevel = 0
                     else:
                         sublevel = 255
                     #https://stackoverflow.com/questions/229186/os-walk-without-digging-into-directories-below
                     for (path, dirs, files) in walklevel(folder, sublevel):
-                        #subfolders included
+                    #subfolders included
                         for items in files:
                             fullpath = os.path.join(path,items)
                             #lastmodified in seconds since the last epoch
                             lastmodified = os.path.getmtime(fullpath)
                             bestbefore = lastmodified + bestbeforedelta
                             if bestbefore <= systemtime:
-                                todelete.append(fullpath)
+                                 todelete.append(fullpath)
                             else:
                                 pass
             return todelete
-                
-def walklevel(some_dir, level=1):
+
+def walklevel(some_dir, level=0):
     #https://stackoverflow.com/questions/229186/os-walk-without-digging-into-directories-below
     some_dir = some_dir.rstrip(os.path.sep)
     assert os.path.isdir(some_dir)
