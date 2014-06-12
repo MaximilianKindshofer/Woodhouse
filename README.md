@@ -1,7 +1,7 @@
 Woodhouse
 =========
 
-An Hazle like implementation in Python and for Linux
+An Hazle like implementation in Python and for Linux (and Windows, but focused on Linux)
 
 #Introduction
 
