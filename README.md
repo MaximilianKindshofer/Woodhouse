@@ -12,8 +12,8 @@ files older than a month? Or your tmp folder?
 
 #Woodhouse Icon
 
+With permission of Ddrago:
 http://ddrago.deviantart.com/
-http://findicons.com/icon/229377/home?id=229389
 
 #Copyright
 
