@@ -146,9 +146,9 @@ def testrules(folder):
                         if bestbefore <= systemtime:
                             filesandfolders.append(fullpath)
                 return filesandfolders
-                
-                
-            
+
+
+
 def clean(test=True):
     if not os.path.exists('rules.conf'):
         pass
@@ -178,7 +178,7 @@ def clean(test=True):
                     elif bestbeforescale == 'years':
                         #a year has 31536000 seconds
                         bestbeforedelta = bestbeforetime * 31536000
-                    
+
                     if config[s]['Subfolder'] == 'False':
                         for files in os.listdir(folder):
                             if os.path.isfile(os.path.join(folder, files)) == True:
@@ -194,13 +194,25 @@ def clean(test=True):
                                 lastmodified = os.path.getmtime(fullpath)
                                 bestbefore = lastmodified + bestbeforedelta
                                 if bestbefore <= systemtime:
+                                    with open('wooghouse.log', 'a') as log:
+                                        log.write("[" + str(time.strftime("%x"
+                                                                         + " "
+                                                                         + "%X"))
+                                        + "]: Deleting" + str(fullpath) + "\n")
                                     os.remove(fullpath)
                             for name in dirs:
                                 fullpath = os.path.join(root, name)
                                 lastmodified = os.path.getmtime(fullpath)
                                 bestbefore = lastmodified + bestbeforedelta
                                 if bestbefore <= systemtime:
+                                    with open('woodhouse.log', 'a') as log:
+                                        log.write("[" + str(time.strftime("%x"
+                                                                         + " "
+                                                                         + "%X"))
+                                        + "]: Deleting" + str(fullpath) + "\n"
+                                                  )
                                     os.rmdir(fullpath)
+
 
 
 def main():
