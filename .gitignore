@@ -1,4 +1,6 @@
 *.bat
+*.log
+*.log
 *.pyc
 *.conf
 *.swp
