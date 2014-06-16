@@ -80,6 +80,13 @@ class MainWindow(QtGui.QWidget):
         self.setLayout(self.grid)
         self.show()
 
+    def msgbox(self, title, text):
+        msgBox = QtGui.QMessageBox()
+        msgBox.setWindowIcon(self.woodhouseicon)
+        msgBox.setWindowTitle(title)
+        msgBox.setText(text)
+        msgBox.exec_()
+
     def closeEvent(self, event):
         self.hide()
         msg = "The program will keep running in the system tray. To terminate the program, choose 'Quit' in the context menu of the system tray entry."
@@ -108,11 +115,7 @@ class MainWindow(QtGui.QWidget):
         for item in rule:
             folder = item.toolTip()
         if rulename == []:
-            msgBox = QtGui.QMessageBox()
-            msgBox.setWindowIcon(self.woodhouseicon)
-            msgBox.setWindowTitle('Select a rule')
-            msgBox.setText('Please select rule')
-            msgBox.exec_()
+            self.msgbox('Select a rule', 'Please select a rule')
         else:
             woodhouse.toggleactivateRule(folder, rulename[0])
             item = rule[0]
@@ -185,11 +188,7 @@ class MainWindow(QtGui.QWidget):
         # None
         foldername = self.folderlist.selectedItems()
         if foldername == []:
-            msgBox = QtGui.QMessageBox()
-            msgBox.setWindowIcon(self.woodhouseicon)
-            msgBox.setWindowTitle('No selected Folder')
-            msgBox.setText("Choose a Folder to apply rules to.")
-            msgBox.exec_()
+            self.msgbox('No selected Folder', 'Choose a Folter to apply rules to.')
         else:
             self.ruleset = QtGui.QDialog(self)
             self.ruleset.setWindowIcon(self.woodhouseicon)
@@ -229,26 +228,14 @@ class MainWindow(QtGui.QWidget):
     def addRuleHelper(self):
         #get the text from configRule's QLineEdit
         if self.nameline.text() == '':
-            msgBox = QtGui.QMessageBox()
-            msgBox.setWindowIcon(self.woodhouseicon)
-            msgBox.setWindowTitle('Name rule')
-            msgBox.setText('Please name your rule')
-            msgBox.exec_()
+            self.msgbox('Name rule','Please name your rule')
         #check for duplicated rulenames
         elif len(self.rulelist.findItems(self.nameline.text(),
                                          QtCore.Qt.MatchExactly)) != 0:
-            msgBox = QtGui.QMessageBox()
-            msgBox.setWindowIcon(self.woodhouseicon)
-            msgBox.setWindowTitle('Duplicate rule')
-            msgBox.setText('Please use an other name')
-            msgBox.exec_()
+            self.msgbox('Duplicate rule', 'Please use an other name')
         #check if time is set
         elif self.time.text() == '':
-            msgBox = QtGui.QMessageBox()
-            msgBox.setWindowIcon(self.woodhouseicon)
-            msgBox.setWindowTitle('Enter a Time')
-            msgBox.setText('Enter a valid Time range')
-            msgBox.exec_()
+            self.msgbox('Enter a Time', 'Enter a valid Time range')
         else:
             self.ruleset.accept()
             pathobject = self.folderlist.selectedItems()
@@ -282,11 +269,7 @@ class MainWindow(QtGui.QWidget):
         for item in rule:
             folder = item.toolTip()
         if rulename == []:
-            msgBox = QtGui.QMessageBox()
-            msgBox.setWindowIcon(self.woodhouseicon)
-            msgBox.setWindowTitle('Select a rule')
-            msgBox.setText('Please select rule')
-            msgBox.exec_()
+            self.msgbox('Select a rule', 'Please select rule')
         else:
             self.ruleedit = QtGui.QDialog(self)
             self.ruleedit.setWindowIcon(self.woodhouseicon)
@@ -349,11 +332,7 @@ class MainWindow(QtGui.QWidget):
 
         nameobject = self.rulelist.selectedItems()
         if nameobject == []:
-            msgBox = QtGui.QMessageBox()
-            msgBox.setWindowIcon(self.woodhouseicon)
-            msgBox.setWindowTitle('No rule selected')
-            msgBox.setText('Please select a rule to delete.')
-            msgBox.exec_()
+            self.msgbox('No rule selected', 'Please select a rule to delete.')
         else:
             name = [n.text() for n in nameobject]
             path = [n.toolTip() for n in nameobject]
@@ -380,20 +359,16 @@ class MainWindow(QtGui.QWidget):
         rulename = [r.text() for r in rule]
         folder = rule[0].toolTip()
         if rulename == []:
-            msgBox = QtGui.QMessageBox()
-            msgBox.setWindowIcon(self.woodhouseicon)
-            msgBox.setWindowTitle('No rule selected')
-            msgBox.setText('Please select a rule to delete.')
-            msgBox.exec_()
+            self.msgbox('No rule selected','Please select a rule to delete.')
         else:
-            
             delete = woodhouse.testrules( folder)
             ruledelete = []
             text = "Items that should be deleted: \n"
             for items in delete:
                 if folder in items:
                     ruledelete.append(items)
-                    text = text + str(items) + '\n'
+            text = text + str(items) + '\n'
+            #Messagebox with extras:
             msgBox = QtGui.QMessageBox()
             msgBox.setWindowIcon(self.woodhouseicon)
             msgBox.setWindowTitle('Items to delete')
